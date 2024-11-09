@@ -1,0 +1,116 @@
+addEventListener("fetch", event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url)
+
+  // 如果请求是POST请求，表示用户提交了m3u8 URL
+  if (request.method === 'POST') {
+    const formData = await request.formData()
+    const m3u8Url = formData.get('m3u8Url')
+
+    // 响应一个带有播放器的页面，包含用户提供的m3u8 URL
+    return new Response(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Simple m3u8 Player</title>
+          <script src="https://cdn.jsdelivr.net/npm/hls.js@1.0.0/dist/hls.min.js"></script>
+        </head>
+        <body>
+          <h1>m3u8 Player</h1>
+          <form method="POST">
+            <label for="m3u8Url">Enter m3u8 URL:</label>
+            <input type="text" id="m3u8Url" name="m3u8Url" value="${m3u8Url || ''}" required>
+            <button type="submit">Play</button>
+          </form>
+
+          <h2>Player</h2>
+          ${m3u8Url ? `
+            <video id="video" width="640" height="360" controls>
+              Your browser does not support the video tag.
+            </video>
+            <script>
+              var video = document.getElementById('video');
+              if (Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource('${m3u8Url}');
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                  video.play();
+                });
+              } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = '${m3u8Url}';
+                video.addEventListener('loadedmetadata', function() {
+                  video.play();
+                });
+              }
+            </script>
+          ` : '<p>Please enter a valid m3u8 URL above.</p>'}
+          
+          <h2>Batch m3u8 URLs</h2>
+          <form method="POST">
+            <textarea id="batchUrls" name="batchUrls" rows="10" cols="50" placeholder="Enter multiple m3u8 URLs, one per line"></textarea><br>
+            <button type="submit">Submit Batch</button>
+          </form>
+
+          <h3>Cleaned URLs:</h3>
+          <pre>
+          ${processBatchUrls(formData.get('batchUrls'))}
+          </pre>
+        </body>
+      </html>
+    `, {
+      headers: { "Content-Type": "text/html" }
+    })
+  }
+
+  // 默认返回带有URL输入框的页面
+  return new Response(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Simple m3u8 Player</title>
+      </head>
+      <body>
+        <h1>m3u8 Player</h1>
+        <form method="POST">
+          <label for="m3u8Url">Enter m3u8 URL:</label>
+          <input type="text" id="m3u8Url" name="m3u8Url" required>
+          <button type="submit">Play</button>
+        </form>
+        
+        <h2>Player</h2>
+        <p>Please enter a valid m3u8 URL above.</p>
+
+        <h2>Batch m3u8 URLs</h2>
+        <form method="POST">
+          <textarea id="batchUrls" name="batchUrls" rows="10" cols="50" placeholder="Enter multiple m3u8 URLs, one per line"></textarea><br>
+          <button type="submit">Submit Batch</button>
+        </form>
+
+        <h3>Cleaned URLs:</h3>
+        <pre></pre>
+      </body>
+    </html>
+  `, {
+    headers: { "Content-Type": "text/html" }
+  })
+}
+
+// 处理批量m3u8 URL列表，去掉数字和"$"符号
+function processBatchUrls(batchUrls) {
+  if (!batchUrls) {
+    return "No batch URLs submitted.";
+  }
+
+  // 处理字符串，去掉数字和"$"符号
+  const cleanedUrls = batchUrls
+    .split('\n')                          // 按行分割
+    .map(line => line.split('$')[1])       // 分割每行，并取"$"后面的URL
+    .filter(url => url)                   // 过滤空值
+    .join('\n');                           // 重新拼接成一个字符串
+
+  return cleanedUrls || "No valid URLs found.";
+}
