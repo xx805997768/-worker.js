@@ -1,0 +1,156 @@
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  // HTML 内容，嵌入你提供的 HTML 页面代码
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>批量提取 M3U8 视频链接并播放</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                padding: 20px;
+                text-align: center;
+            }
+            textarea {
+                width: 80%;
+                height: 150px;
+                margin-bottom: 20px;
+                padding: 10px;
+                font-size: 16px;
+                border-radius: 4px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                border-radius: 4px;
+                margin-top: 10px;
+                background-color: #4CAF50;
+                color: white;
+            }
+            #output {
+                margin-top: 20px;
+                padding: 10px;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                font-size: 16px;
+                width: 80%;
+                margin: 20px auto;
+                border-radius: 4px;
+                display: none;
+            }
+            select {
+                font-size: 16px;
+                padding: 10px;
+                width: 80%;
+                margin-top: 20px;
+            }
+            video {
+                width: 80%;
+                max-width: 900px;
+                margin-top: 20px;
+                border: 2px solid #ccc;
+            }
+        </style>
+    </head>
+    <body>
+
+        <h2>批量提取 M3U8 视频链接并播放</h2>
+        <textarea id="input-text" placeholder="输入多个带有数字和$的M3U8链接，每行一个"></textarea>
+        <button onclick="extractUrls()">提取链接</button>
+
+        <div id="output"></div>
+
+        <h3>选择一个视频播放：</h3>
+        <select id="video-selector" onchange="playVideo()">
+            <option value="">请选择视频</option>
+        </select>
+
+        <video id="video-player" controls></video>
+
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@1.0.0/dist/hls.min.js"></script>
+        <script>
+            // 提取 M3U8 链接并更新选项
+            function extractUrls() {
+                // 获取输入文本
+                var inputText = document.getElementById('input-text').value;
+                
+                // 使用正则表达式提取所有符合条件的 m3u8 链接
+                var regex = /\\d+\\$(https:\\/\\/[^\\s]+)/g;
+                var matches = [];
+                var match;
+                
+                // 查找所有符合条件的链接
+                while ((match = regex.exec(inputText)) !== null) {
+                    matches.push(match[1]);
+                }
+                
+                // 显示提取结果并更新视频选择下拉框
+                var outputDiv = document.getElementById('output');
+                var videoSelector = document.getElementById('video-selector');
+                if (matches.length > 0) {
+                    outputDiv.innerHTML = '<h3>提取的 M3U8 链接：</h3>';
+                    outputDiv.innerHTML += matches.join('<br>');
+                    outputDiv.style.display = 'block';
+                    
+                    // 更新选择框
+                    videoSelector.innerHTML = '<option value="">请选择视频</option>';
+                    matches.forEach((url, index) => {
+                        var option = document.createElement('option');
+                        option.value = url;
+                        option.textContent = \`视频 \${index + 1}\`;
+                        videoSelector.appendChild(option);
+                    });
+                } else {
+                    outputDiv.innerHTML = '没有找到有效的 M3U8 链接';
+                    outputDiv.style.display = 'block';
+                }
+            }
+
+            // 播放选中的视频
+            function playVideo() {
+                var videoUrl = document.getElementById('video-selector').value;
+                var videoPlayer = document.getElementById('video-player');
+
+                if (videoUrl === '') {
+                    alert('请选择一个视频链接');
+                    return;
+                }
+
+                // 检查浏览器是否支持 HLS
+                if (Hls.isSupported()) {
+                    var hls = new Hls();
+                    hls.loadSource(videoUrl);
+                    hls.attachMedia(videoPlayer);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        videoPlayer.play();
+                    });
+                }
+                // 如果浏览器原生支持 HLS (如 Safari)，直接播放
+                else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoPlayer.src = videoUrl;
+                    videoPlayer.addEventListener('loadedmetadata', function() {
+                        videoPlayer.play();
+                    });
+                } else {
+                    alert('当前浏览器不支持播放 m3u8 流');
+                }
+            }
+        </script>
+
+    </body>
+    </html>
+  `;
+
+  // 返回 HTML 页面
+  return new Response(htmlContent, {
+    headers: { 'Content-Type': 'text/html; charset=UTF-8' }
+  });
+}
