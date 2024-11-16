@@ -1,0 +1,153 @@
+addEventListener("fetch", event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url)
+
+  // 如果请求是POST请求，表示用户提交了m3u8 URL
+  if (request.method === 'POST') {
+    const formData = await request.formData()
+    const rawUrls = formData.get('m3u8Urls') || ''
+    const startEpisode = parseInt(formData.get('startEpisode') || '0') || 0
+    const autoPlay = formData.has('autoPlay')  // 获取是否启用自动播放的选项
+
+    // 清理URL，去掉数字和$符号
+    const m3u8Urls = cleanUrls(rawUrls)
+
+    // 响应一个带有播放器的页面，包含用户提供的m3u8 URL
+    return new Response(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Simple m3u8 Player</title>
+          <script src="https://cdn.jsdelivr.net/npm/hls.js@1.0.0/dist/hls.min.js"></script>
+        </head>
+        <body>
+          <h1>m3u8 Player</h1>
+          <form method="POST">
+            <label for="m3u8Urls">Enter m3u8 URLs (one per line):</label><br>
+            <textarea id="m3u8Urls" name="m3u8Urls" rows="10" cols="50">${m3u8Urls.join('\n')}</textarea><br>
+
+            <label for="startEpisode">Select Starting Episode:</label><br>
+            <select id="startEpisode" name="startEpisode">
+              ${m3u8Urls.map((_, index) => `
+                <option value="${index}" ${startEpisode === index ? 'selected' : ''}>Episode ${index + 1}</option>
+              `).join('')}
+            </select><br>
+
+            <label for="autoPlay">Enable Auto Play Next Episode:</label>
+            <input type="checkbox" id="autoPlay" name="autoPlay" ${autoPlay ? 'checked' : ''}><br>
+
+            <button type="submit">Play</button>
+          </form>
+
+          <h2>Player</h2>
+          ${m3u8Urls.length > 0 ? `
+            <video id="video" width="640" height="360" controls>
+              Your browser does not support the video tag.
+            </video>
+            <script>
+              var video = document.getElementById('video');
+              var currentIndex = ${startEpisode};
+              var m3u8Urls = ${JSON.stringify(m3u8Urls)};
+              var autoPlay = ${autoPlay};
+
+              function loadAndPlay(index) {
+                if (index >= m3u8Urls.length) {
+                  alert('No more episodes!');
+                  return;
+                }
+
+                var m3u8Url = m3u8Urls[index];
+                if (Hls.isSupported()) {
+                  var hls = new Hls();
+                  hls.loadSource(m3u8Url);
+                  hls.attachMedia(video);
+                  hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                  });
+
+                  if (autoPlay) {
+                    // 当当前视频播放结束，加载下一集
+                    video.onended = function() {
+                      currentIndex++;
+                      loadAndPlay(currentIndex);
+                    };
+                  }
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                  video.src = m3u8Url;
+                  video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                  });
+
+                  if (autoPlay) {
+                    // 当当前视频播放结束，加载下一集
+                    video.onended = function() {
+                      currentIndex++;
+                      loadAndPlay(currentIndex);
+                    };
+                  }
+                }
+              }
+
+              loadAndPlay(currentIndex);
+
+              // 监听下拉框更改事件，手动选择集数播放
+              document.getElementById('startEpisode').addEventListener('change', function(event) {
+                currentIndex = parseInt(event.target.value);
+                loadAndPlay(currentIndex);
+              });
+            </script>
+          ` : '<p>Please enter at least one valid m3u8 URL.</p>'}
+
+        </body>
+      </html>
+    `, {
+      headers: { "Content-Type": "text/html" }
+    })
+  }
+
+  // 默认页面
+  return new Response(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Simple m3u8 Player</title>
+      </head>
+      <body>
+        <h1>m3u8 Player</h1>
+        <form method="POST">
+          <label for="m3u8Urls">Enter m3u8 URLs (one per line):</label><br>
+          <textarea id="m3u8Urls" name="m3u8Urls" rows="10" cols="50" placeholder="Enter multiple m3u8 URLs, one per line"></textarea><br>
+
+          <label for="startEpisode">Select Starting Episode:</label><br>
+          <select id="startEpisode" name="startEpisode">
+            <option value="0">Episode 1</option>
+            <!-- Additional options will be populated based on the URLs -->
+          </select><br>
+
+          <label for="autoPlay">Enable Auto Play Next Episode:</label>
+          <input type="checkbox" id="autoPlay" name="autoPlay"><br>
+
+          <button type="submit">Play</button>
+        </form>
+
+        <h2>Player</h2>
+        <p>Please enter valid m3u8 URLs above.</p>
+      </body>
+    </html>
+  `, {
+    headers: { "Content-Type": "text/html" }
+  })
+}
+
+// 清理m3u8 URL列表，去掉数字和$符号
+function cleanUrls(rawUrls) {
+  return rawUrls
+    .split('\n')                      // 按行分割
+    .map(line => line.split('$')[1])    // 去掉"$"符号及其前面的数字
+    .filter(url => url)                // 过滤掉空行
+    .map(url => url.trim())            // 去除每个URL的前后空白字符
+    .filter(url => url.length > 0);    // 过滤掉空字符串
+}
