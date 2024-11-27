@@ -3,7 +3,7 @@
 所有人都可共同维护worker.js为worker.js添砖加瓦
 最新更新修复cloudflare vless免费节点1101错误解决方法vless代码混淆教学 解决1101报错
 以 vless代码为例，演示js代码混淆，解决1101错误
-如果想使用，我混淆好的vless代码，可以从此获取：https://github.com/shiteThings/edgetunnel/blob/main/cmjs-obfs.js
+如果想使用，我混淆好的vless代码，可以从此获取：[https://github.com/shiteThings/edgetunnel/blob/main/cmjs-obfs.js](https://github.com/xx805997768/-worker.js/blob/main/output.js)
 
 确保你的系统已经安装了 Node.js。然后使用 npm 安装 JavaScript Obfuscator，安装时，最好开tun模式。
 
