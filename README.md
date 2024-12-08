@@ -13,3 +13,4 @@ npm install -g javascript-obfuscator
 可以使用以下命令，进行js代码混淆和加密。注意，如果你的js文件名称不叫做input.js，需要将下面命令的input.js改成你的js文件名称。
 
 javascript-obfuscator input.js --output output.js --compact true  --string-array true --string-array-encoding base64
+最新版代码已经修复了1101错误代码
