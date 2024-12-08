@@ -1,0 +1,25 @@
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request));
+});
+
+const cache = caches.default;
+
+async function handleRequest(request) {
+    const cacheKey = new Request(request.url, request);
+    let response = await cache.match(cacheKey);
+
+    if (!response) {
+        const url = new URL(request.url);
+        url.hostname = 'sp.hjhgsdhgajksd.dynv6.net';
+        
+        const newRequest = new Request(url, request);
+        response = await fetch(newRequest);
+
+        response = new Response(response.body, response);
+        response.headers.set('X-Custom-Header', 'Powered by Cloudflare Workers');
+
+        await cache.put(cacheKey, response.clone());
+    }
+
+    return response;
+}
