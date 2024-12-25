@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>VLESS URL生成器</title>
+    <style>
+        #output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        #form-container {
+            display: none;
+        }
+        #error-message {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>VLESS URL生成器</h1>
+    
+    <!-- Password Form -->
+    <div id="password-form">
+        <label for="password">请输入密码：</label>
+        <input type="password" id="password">
+        <button onclick="checkPassword()">提交</button>
+        <p id="error-message">密码错误，请重新输入！</p>
+    </div>
+
+    <!-- Main Form (hidden initially) -->
+    <div id="form-container">
+        <div>
+            <label for="uuid">UUID：</label>
+            <input type="text" id="uuid" value="8299eb0f-3ea2-4867-b625-07326fc6fea0">
+        </div>
+        <div>
+            <label for="address">地址：</label>
+            <input type="text" id="address" value="104.18.41.172">
+        </div>
+        <div>
+            <label for="ports">端口（用逗号分隔）：</label>
+            <input type="text" id="ports" value="443,8443,2053,2083,2087,2096">
+        </div>
+        <div>
+            <label for="sni">SNI：</label>
+            <input type="text" id="sni" value="w.alibababa.us.kg">
+        </div>
+        <div>
+            <label for="path">路径：</label>
+            <input type="text" id="path" value="%2F%3Fed%3D2048">
+        </div>
+        <button onclick="generateUrls()">生成URL</button>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const correctPassword = "5201314";  // The password to access the URL generator
+
+        // Function to check the password
+        function checkPassword() {
+            const enteredPassword = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            const formContainer = document.getElementById('form-container');
+            const passwordForm = document.getElementById('password-form');
+
+            if (enteredPassword === correctPassword) {
+                // Hide password form and show the main form
+                passwordForm.style.display = 'none';
+                formContainer.style.display = 'block';
+            } else {
+                // Show error message if password is incorrect
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Function to generate VLESS URLs
+        function generateUrls() {
+            const uuid = document.getElementById('uuid').value;
+            const address = document.getElementById('address').value;
+            const ports = document.getElementById('ports').value.split(',');
+            const sni = document.getElementById('sni').value;
+            const path = document.getElementById('path').value;
+            const urls = ports.map(port => {
+                return `vless://${uuid}@${address}:${port.trim()}?encryption=none&security=tls&sni=${sni}&fp=randomized&allowInsecure=1&type=ws&host=${sni}&path=${path}#${sni}`;
+            });
+            document.getElementById('output').textContent = urls.join('\n');
+        }
+    </script>
+</body>
+</html>

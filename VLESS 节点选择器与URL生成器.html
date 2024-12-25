@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLESS 节点选择器与URL生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label, textarea, button {
+            display: block;
+            margin: 10px 0;
+        }
+        #vless-links-output {
+            width: 100%;
+            height: 200px;
+            white-space: pre-wrap;
+        }
+        #output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        #form-container, #content {
+            display: none;
+        }
+        #error-message {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>VLESS 节点选择器与URL生成器</h1>
+    
+    <!-- Password Form -->
+    <div id="password-form">
+        <label for="password">请输入密码：</label>
+        <input type="password" id="password">
+        <button onclick="checkPassword()">提交</button>
+        <p id="error-message">密码错误，请重新输入！</p>
+    </div>
+
+    <!-- Main Form (hidden initially) -->
+    <div id="form-container">
+        <h2>VLESS URL 生成器</h2>
+        <div>
+            <label for="uuid">UUID：</label>
+            <input type="text" id="uuid" value="8299eb0f-3ea2-4867-b625-07326fc6fea0">
+        </div>
+        <div>
+            <label for="address">地址：</label>
+            <input type="text" id="address" value="104.18.41.172">
+        </div>
+        <div>
+            <label for="ports">端口（用逗号分隔）：</label>
+            <input type="text" id="ports" value="443,8443,2053,2083,2087,2096">
+        </div>
+        <div>
+            <label for="sni">SNI：</label>
+            <input type="text" id="sni" value="w.alibababa.us.kg">
+        </div>
+        <div>
+            <label for="path">路径：</label>
+            <input type="text" id="path" value="%2F%3Fed%3D2048">
+        </div>
+        <button onclick="generateUrls()">生成URL</button>
+        <pre id="output"></pre>
+    </div>
+
+    <!-- VLESS Node Generator -->
+    <div id="content">
+        <h2>CDN 节点选择器</h2>
+        <label for="original-vless">输入原始 VLESS 链接:</label>
+        <textarea id="original-vless" rows="2" cols="100"></textarea>
+
+        <label for="new-ips">输入新的 IP（以空格或换行分隔）:</label>
+        <textarea id="new-ips" rows="10" cols="100"></textarea>
+
+        <button onclick="addIpAndTest()">添加 IP 并测试</button>
+
+        <h2>生成的 VLESS 节点链接:</h2>
+        <textarea id="vless-links-output"></textarea>
+        <button id="copy-button" onclick="copyToClipboard()">复制全部</button>
+    </div>
+
+    <script>
+        const correctPassword = "5201314";  // The password to access the URL generator and node selector
+
+        // Function to check the password
+        function checkPassword() {
+            const enteredPassword = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            const formContainer = document.getElementById('form-container');
+            const passwordForm = document.getElementById('password-form');
+            const content = document.getElementById('content');
+
+            if (enteredPassword === correctPassword) {
+                // Hide password form and show the main form
+                passwordForm.style.display = 'none';
+                formContainer.style.display = 'block';
+                content.style.display = 'block';  // Show the content section (VLESS node selector)
+            } else {
+                // Show error message if password is incorrect
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Function to generate VLESS URLs
+        function generateUrls() {
+            const uuid = document.getElementById('uuid').value;
+            const address = document.getElementById('address').value;
+            const ports = document.getElementById('ports').value.split(',');
+            const sni = document.getElementById('sni').value;
+            const path = document.getElementById('path').value;
+            const urls = ports.map(port => {
+                return `vless://${uuid}@${address}:${port.trim()}?encryption=none&security=tls&sni=${sni}&fp=randomized&allowInsecure=1&type=ws&host=${sni}&path=${path}#${sni}`;
+            });
+            document.getElementById('output').textContent = urls.join('\n');
+        }
+
+        // Function to add IPs and generate VLESS node links
+        function addIpAndTest() {
+            const originalVless = document.getElementById('original-vless').value.trim();
+            const ipList = document.getElementById('new-ips').value.trim().split(/\s+/);
+            let output = "";
+            ipList.forEach(ip => {
+                if (ip) {
+                    const newLink = originalVless.replace(/(?<=@)[^:]+(?=:)/, ip);
+                    output += newLink + "\n";
+                }
+            });
+            document.getElementById('vless-links-output').value = output;
+        }
+
+        // Function to copy to clipboard
+        function copyToClipboard() {
+            const outputField = document.getElementById('vless-links-output');
+            outputField.select();
+            document.execCommand('copy');
+            alert('已复制到剪贴板！');
+        }
+    </script>
+</body>
+</html>
