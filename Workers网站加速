@@ -1,0 +1,14 @@
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+    const url = new URL(request.url)
+    const targetUrl = 'http://woai.xxdbb.dynv6.net' + url.pathname + url.search
+
+    // Fetch from the target URL
+    const response = await fetch(targetUrl)
+    
+    // Return the fetched content
+    return new Response(await response.body, response)
+}
