@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vmess URL Generator</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .box {
+            width: 45%;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>Vmess URL 生成器</h2>
+    <div class="container">
+        <div class="box">
+            <h3>多端口克隆</h3>
+            <form id="multiPortForm">
+                <label for="uuid">UUID:</label><br>
+                <input type="text" id="uuid" name="uuid" value="da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
+                <label for="baseAddress">基础地址:</label><br>
+                <input type="text" id="baseAddress" name="baseAddress" value="www.visa.com.tw"><br><br>
+                <label for="ports">端口（用逗号分隔）:</label><br>
+                <input type="text" id="ports" name="ports" value="443,8443,2053,2083,2087,2096"><br><br>
+                <label for="host">Host:</label><br>
+                <input type="text" id="host" name="host" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="sni">SNI:</label><br>
+                <input type="text" id="sni" name="sni" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="uuid">UUID:</label><br>
+                <input type="text" id="uuid" name="uuid" value="da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
+                <label for="params">参数:</label><br>
+                <textarea id="params" name="params" rows="4" cols="50">{"v": "2", "ps": "PL-s1-vmess-argo", "aid": "0", "scy": "none", "net": "ws", "type": "none", "path": "/vmess-argo?ed=2048", "tls": "tls", "alpn": "", "fp": ""}</textarea><br><br>
+                <button type="button" onclick="generateMultiPortURLs()">生成多端口URL</button>
+            </form>
+            <h3>生成的URL:</h3>
+            <textarea id="multiPortOutput" rows="10" cols="45" readonly></textarea>
+            <button class="copy-btn" onclick="copyToClipboard('multiPortOutput')">一键复制</button>
+        </div>
+        <div class="box">
+            <h3>地址克隆</h3>
+            <form id="addressCloneForm">
+                <label for="baseURL">基础URL:</label><br>
+                <input type="text" id="baseURL" name="baseURL" value="vmess://da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
+                <label for="addresses">地址（竖向排列）:</label><br>
+                <textarea id="addresses" name="addresses" rows="18" cols="30">
+104.18.0.181
+104.18.0.182
+104.18.0.183
+104.18.0.184
+104.18.0.185
+104.18.0.186
+104.18.0.187
+104.18.0.188
+104.18.0.189
+104.18.0.190
+104.18.0.191
+104.18.0.192
+104.18.0.193
+104.18.0.194
+104.18.0.195
+104.18.0.196
+104.18.0.197
+                </textarea><br><br>
+                <label for="port">端口:</label><br>
+                <input type="text" id="port" name="port" value="443"><br><br>
+                <label for="host">Host:</label><br>
+                <input type="text" id="host" name="host" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="sni">SNI:</label><br>
+                <input type="text" id="sni" name="sni" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="uuid">UUID:</label><br>
+                <input type="text" id="uuid" name="uuid" value="da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
+                <label for="params">参数:</label><br>
+                <textarea id="addressParams" name="params" rows="4" cols="50">{"v": "2", "ps": "PL-s1-vmess-argo", "aid": "0", "scy": "none", "net": "ws", "type": "none", "path": "/vmess-argo?ed=2048", "tls": "tls", "alpn": "", "fp": ""}</textarea><br><br>
+                <button type="button" onclick="generateAddressCloneURLs()">生成地址URL</button>
+            </form>
+            <h3>生成的URL:</h3>
+            <textarea id="addressCloneOutput" rows="10" cols="45" readonly></textarea>
+            <button class="copy-btn" onclick="copyToClipboard('addressCloneOutput')">一键复制</button>
+        </div>
+    </div>
+
+    <script>
+        function generateMultiPortURLs() {
+            const uuid = document.getElementById('uuid').value;
+            const baseAddress = document.getElementById('baseAddress').value;
+            const ports = document.getElementById('ports').value.split(',');
+            const params = JSON.parse(document。getElementById('params').value);
+            const host = document.getElementById('host').value;
+            const sni = document.getElementById('sni').value;
+
+            let urls = '';
+            ports.forEach(port => {
+                params.add = baseAddress;
+                params.port = port;
+                params.id = uuid;
+                params.host = host;
+                params.sni = sni;
+                const url = `vmess://${btoa(JSON.stringify(params))}`;
+                urls += url + '\n';
+            });
+
+            document.getElementById('multiPortOutput').value = urls.trim();
+        }
+
+        function generateAddressCloneURLs() {
+            const baseURL = document.getElementById('baseURL').value;
+            const addresses = document.getElementById('addresses').value.trim().split('\n');
+            const port = document.getElementById('port').value;
+            const params = JSON.parse(document。getElementById('addressParams').value);
+            const host = document.getElementById('host').value;
+            const sni = document.getElementById('sni').value;
+            const uuid = document.getElementById('uuid').value;
+
+            let urls = '';
+            addresses.forEach(address => {
+                params.add = address.trim();
+                params.port = port;
+                params.id = uuid;
+                params.host = host;
+                params.sni = sni;
+                const url = `vmess://${btoa(JSON.stringify(params))}`;
+                urls += url + '\n';
+            });
+
+            document.getElementById('addressCloneOutput').value = urls.trim();
+        }
+
+        function copyToClipboard(elementId) {
+            const output = document.getElementById(elementId);
+            output.select();
+            document.execCommand('copy');
+        }
+    </script>
+</body>
+</html>
