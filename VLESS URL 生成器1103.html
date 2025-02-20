@@ -32,13 +32,15 @@
             <h3>多端口克隆</h3>
             <form id="multiPortForm">
                 <label for="uuid">UUID:</label><br>
-                <input type="text" id="uuid" name="uuid" value="48443eec-237a-4fdd-9f3f-07d6f0a5b898"><br><br>
+                <input type="text" id="uuid" name="uuid" value="da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
                 <label for="baseAddress">基础地址:</label><br>
-                <input type="text" id="baseAddress" name="baseAddress" value="fhb.alibababa.us.kg"><br><br>
+                <input type="text" id="baseAddress" name="baseAddress" value="www.visa.com.tw"><br><br>
                 <label for="ports">端口（用逗号分隔）:</label><br>
                 <input type="text" id="ports" name="ports" value="443,8443,2053,2083,2087,2096"><br><br>
-                <label for="params">参数:</label><br>
-                <textarea id="params" name="params" rows="4" cols="50">encryption=none&security=tls&sni=fhb.alibababa.us.kg&fp=randomized&allowInsecure=1&type=ws&host=fhb.alibababa.us.kg&path=%2F%3Fed%3D2048#fhb.alibababa.us.kg</textarea><br><br>
+                <label for="host">Host:</label><br>
+                <input type="text" id="host" name="host" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="sni">SNI:</label><br>
+                <input type="text" id="sni" name="sni" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
                 <button type="button" onclick="generateMultiPortURLs()">生成多端口URL</button>
             </form>
             <h3>生成的URL:</h3>
@@ -49,7 +51,7 @@
             <h3>地址克隆</h3>
             <form id="addressCloneForm">
                 <label for="baseURL">基础URL:</label><br>
-                <input type="text" id="baseURL" name="baseURL" value="vless://48443eec-237a-4fdd-9f3f-07d6f0a5b898"><br><br>
+                <input type="text" id="baseURL" name="baseURL" value="vless://da0e4ab7-23ed-47b3-9edf-4a33d8a8afed"><br><br>
                 <label for="addresses">地址（竖向排列）:</label><br>
                 <textarea id="addresses" name="addresses" rows="18" cols="30">
 104.18.0.181
@@ -72,8 +74,12 @@
                 </textarea><br><br>
                 <label for="port">端口:</label><br>
                 <input type="text" id="port" name="port" value="443"><br><br>
-                <label for="params">参数:</label><br>
-                <textarea id="addressParams" name="params" rows="4" cols="50">encryption=none&security=tls&sni=fhb.alibababa.us.kg&fp=randomized&allowInsecure=1&type=ws&host=fhb.alibababa.us.kg&path=%2F%3Fed%3D2048#fhb.alibababa.us.kg</textarea><br><br>
+                <label for="hostAddress">Host:</label><br>
+                <input type="text" id="hostAddress" name="hostAddress" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="sniAddress">SNI:</label><br>
+                <input type="text" id="sniAddress" name="sniAddress" value="connector-periods-letting-sensitivity.trycloudflare.com"><br><br>
+                <label for="addressParams">参数:</label><br>
+                <textarea id="addressParams" name="addressParams" rows="4" cols="50">encryption=none&security=tls&fp=randomized&allowInsecure=1&type=ws&path=%2F%3Fed%3D2048</textarea><br><br>
                 <button type="button" onclick="generateAddressCloneURLs()">生成地址URL</button>
             </form>
             <h3>生成的URL:</h3>
@@ -87,11 +93,12 @@
             const uuid = document.getElementById('uuid').value;
             const baseAddress = document.getElementById('baseAddress').value;
             const ports = document.getElementById('ports').value.split(',');
-            const params = document.getElementById('params').value;
+            const host = document.getElementById('host').value;
+            const sni = document.getElementById('sni').value;
 
             let urls = '';
             ports.forEach(port => {
-                const url = `vless://${uuid}@${baseAddress}:${port}?${params}`;
+                const url = `vless://${uuid}@${baseAddress}:${port}?encryption=none&security=tls&sni=${sni}&fp=randomized&allowInsecure=1&type=ws&host=${host}&path=%2F%3Fed%3D2048#${baseAddress}`;
                 urls += url + '\n';
             });
 
@@ -102,11 +109,13 @@
             const baseURL = document.getElementById('baseURL').value;
             const addresses = document.getElementById('addresses').value.trim().split('\n');
             const port = document.getElementById('port').value;
-            const params = document.getElementById('addressParams').value;
+            const hostAddress = document.getElementById('hostAddress').value;
+            const sniAddress = document.getElementById('sniAddress').value;
+            const addressParams = document.getElementById('addressParams').value;
 
             let urls = '';
             addresses.forEach(address => {
-                const url = `${baseURL}@${address。trim()}:${port}?${params}`;
+                const url = `${baseURL}@${address.trim()}:${port}?${addressParams}&sni=${sniAddress}&host=${hostAddress}#${hostAddress}`;
                 urls += url + '\n';
             });
 
@@ -114,7 +123,7 @@
         }
 
         function copyToClipboard(elementId) {
-            const output = document。getElementById(elementId);
+            const output = document.getElementById(elementId);
             output.select();
             document.execCommand('copy');
         }
