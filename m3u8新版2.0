@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M3U8视频播放器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    。container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #007BFF;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    select, input[type="checkbox"] {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    video {
+      width: 100%;
+      max-width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 20px;
+      background: #000;
+    }
+  </style>
+  <!-- 引入 hls.js 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>M3U8视频播放器</h1>
+    <!-- 多行文本框输入节目数据，每行格式：节目名称$视频链接 -->
+    <textarea id="m3u8Links" placeholder="例如：
+第01集$https://cdn.ryplay11.com/20250317/174641_0c861a62/index.m3u8
+第02集$https://cdn.ryplay11.com/20250318/174687_374e9dac/index.m3u8
+第03集$https://cdn.ryplay11.com/20250319/174841_30e9cc12/index.m3u8"></textarea>
+    <br>
+    <button onclick="extractLinks()">提取链接</button>
+    <br>
+    <label for="videoSelect">请选择视频:</label>
+    <select id="videoSelect" onchange="loadVideo()">
+      <option value="">选择视频</option>
+    </select>
+    <br>
+    <input type="checkbox" id="autoPlay" checked> <label for="autoPlay">自动播放下一集</label>
+    
+    <!-- 视频播放区域 -->
+    <video id="videoPlayer" controls poster="https://via.placeholder.com/800x450?text=视频缩略图"></video>
+  </div>
+
+  <script>
+    let episodes = [];
+    let hls;
+
+    // 解析文本框中的数据，生成视频列表
+    function extractLinks() {
+      const text = document.getElementById("m3u8Links").value;
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
+      episodes = [];
+      
+      lines.forEach(line => {
+        const parts = line.split('$');
+        if (parts.length === 2) {
+          const title = parts[0].trim();
+          const url = parts[1].trim();
+          if (title && url) {
+            episodes.push({ title, url });
+          }
+        }
+      });
+      
+      if (episodes.length > 0) {
+        let selectHTML = '<option value="">选择视频</option>';
+        episodes.forEach((episode, index) => {
+          selectHTML += `<option value="${index}">${episode.title}</option>`;
+        });
+        document.getElementById("videoSelect").innerHTML = selectHTML;
+        alert("已成功提取 " + episodes.length + " 个链接！");
+      } else {
+        alert("未找到有效链接，请检查输入格式（格式应为：节目名称$链接）");
+      }
+    }
+
+    // 加载选中的视频并使用 hls.js 播放
+    function loadVideo() {
+      const select = document.getElementById("videoSelect");
+      const selectedIndex = select.value;
+      
+      if (selectedIndex === "") {
+        return;
+      }
+      
+      const videoSource = episodes[selectedIndex].url;
+      const video = document.getElementById('videoPlayer');
+      
+      // 清理之前的 hls 实例（如果存在）
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(videoSource);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // 对于 Safari 等支持原生 HLS 播放的浏览器
+        video.src = videoSource;
+        video.addEventListener('loadedmetadata', function() {
+          video.play();
+        });
+      } else {
+        alert("您的浏览器不支持播放此格式的视频。");
+      }
+    }
+    
+    // 视频播放结束时，自动播放下一集的逻辑
+    document.getElementById('videoPlayer').addEventListener('ended', function() {
+      if (document.getElementById('autoPlay').checked && episodes.length > 0) {
+        const select = document.getElementById("videoSelect");
+        let nextIndex = parseInt(select.value) + 1;
+        if (nextIndex < episodes.length) {
+          select.value = nextIndex;
+          loadVideo();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
