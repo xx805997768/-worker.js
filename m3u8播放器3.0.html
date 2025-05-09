@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>M3U8 批量顺序播放</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            min-height: 100vh;
+            width: 100vw;
+            background-color: #fafafa;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s;
+        }
+        .center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.3); /* 半透明白色背景 */
+            border-radius: 16px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.1);
+            padding: 32px 0 32px 0;
+        }
+        textarea, select, video, button, label {
+            margin-top: 10px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.7);
+            z-index: 0;
+            pointer-events: none;
+        }
+        video {
+            background: rgba(255,255,255,0.2); /* 视频区域半透明 */
+            border-radius: 8px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="center">
+        <h2>M3U8 批量顺序播放</h2>
+        <textarea id="batchInput" placeholder="每行输入如第01集$ `url`或直接url" style="width:400px;height:100px;"></textarea>
+        <br>
+        <button onclick="batchAdd()">批量添加</button>
+        <label style="margin-left:20px;">
+            <input type="checkbox" id="autoNext" checked> 顺序播放
+        </label>
+        <br><br>
+        <select id="episode" onchange="play()" style="width:420px;">
+            <option value="">请选择或添加视频源</option>
+        </select>
+        <br><br>
+        <video id="video" controls width="640" height="360"></video>
+    </div>
+    <script>
+        // 必应壁纸API，获取随机壁纸
+        fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=' + Math.floor(Math.random()*7) + '&n=1')
+            .then(response => response.json())
+            .then(data => {
+                if(data.images && data.images.length > 0){
+                    var imgUrl = 'https://www.bing.com' + data.images[0].url;
+                    document.body.style.backgroundImage = 'url(' + imgUrl + ')';
+                } else {
+                    // 备用背景
+                    document.body.style.backgroundImage = 'url(https://picsum.photos/1920/1080)';
+                }
+            })
+            .catch(() => {
+                // 备用背景
+                document.body.style.backgroundImage = 'url(https://picsum.photos/1920/1080)';
+            });
+
+        var hls;
+        var episodeList = [];
+        function batchAdd() {
+            var input = document.getElementById('batchInput').value.trim();
+            if (!input) {
+                alert('请输入至少一个m3u8视频源地址');
+                return;
+            }
+            var lines = input.split('\n');
+            var select = document.getElementById('episode');
+            episodeList = [];
+            select.innerHTML = '<option value="">请选择或添加视频源</option>';
+            lines.forEach(function(line) {
+                var raw = line.trim();
+                if (!raw) return;
+                var match = raw.match(/`([^`]+)`/);
+                var url = match ? match[1] : null;
+                if (!url) {
+                    var urlMatch = raw.match(/https?:\/\/[^\s`]+/);
+                    url = urlMatch ? urlMatch[0] : null;
+                }
+                if (url) {
+                    // 优先显示“第xx集”前缀，否则显示url
+                    var labelMatch = raw.match(/^(第\d+集)/);
+                    var label = labelMatch ? labelMatch[1] : url;
+                    episodeList.push({label: label, url: url});
+                    var option = document.createElement('option');
+                    option.text = label;
+                    option.value = episodeList.length - 1;
+                    select.appendChild(option);
+                }
+            });
+            document.getElementById('batchInput').value = '';
+        }
+        function play(index) {
+            var select = document.getElementById('episode');
+            var video = document.getElementById('video');
+            if (typeof index === 'undefined') {
+                index = select.value;
+            }
+            if (index === "" || episodeList.length === 0) return;
+            index = parseInt(index);
+            var url = episodeList[index].url;
+            select.value = index;
+            if (hls) hls.destroy();
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+            } else {
+                alert('你的浏览器不支持M3U8播放');
+            }
+            video.onended = function() {
+                var autoNext = document.getElementById('autoNext').checked;
+                var next = index + 1;
+                if (autoNext && next < episodeList.length) {
+                    play(next);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
