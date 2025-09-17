@@ -1,0 +1,21 @@
+export default {
+  async fetch(request) {
+    const { searchParams } = new URL(request.url);
+    const target = searchParams.get('url');
+    if (!target) return new Response('Missing url', { status: 400 });
+    if (!/^https?:\/\/.+/i.test(target)) return new Response('Invalid url', { status: 400 });
+    const upstream = await fetch(target, {
+      method: 'GET',
+      headers: { 'User-Agent': 'Mozilla/5.0 CFWorkerProxy' }
+    });
+    const headers = new Headers(upstream.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Access-Control-Allow-Headers', '*');
+    headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD');
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers
+    });
+  }
+}
