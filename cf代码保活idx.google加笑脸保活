@@ -1,0 +1,43 @@
+const TARGET_URLS = [
+  "https://huggingface.co/spaces/xx2238146464/65468465",
+  "https://idx.google.com/sbx-83304660",
+  "https://idx.google.com/xxy-01510756"
+];
+
+export default {
+  async fetch(request, env, ctx) {
+    // 并发检测所有站点
+    const statuses = await Promise.all(
+      TARGET_URLS.map(checkUrl)
+    );
+    // 构造结果字符串
+    let result = statuses
+      .map(s => `[${s.url}] Status: ${s.status}${s.error ? ` (${s.error})` : ''}`)
+      .join('\n');
+    return new Response(result, { status: 200, headers: { "content-type": "text/plain" } });
+  },
+
+  async scheduled(event, env, ctx) {
+    const statuses = await Promise.all(
+      TARGET_URLS.map(checkUrl)
+    );
+    for (const s of statuses) {
+      console.log(`[${s.url}] Status: ${s.status}${s.error ? ` (${s.error})` : ''}`);
+    }
+    // 可以保存到KV/R2或其它监控逻辑
+  }
+}
+
+// 单站点检测函数
+async function checkUrl(url) {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+    return { url, status: res.status };
+  } catch (e) {
+    return { url, status: "ERR", error: e.message };
+  }
+}
