@@ -1,0 +1,79 @@
+export default {
+  async fetch(request, env, ctx) {
+    const { searchParams } = new URL(request.url)
+    const url = searchParams.get("url");
+    const pic = searchParams.get("pic") || "";
+    let quality = [];
+    try {
+      // 支持 &quality=[{"name":"1080p","url":"..."}, ...]
+      const qualityStr = searchParams.get("quality");
+      if (qualityStr) {
+        quality = JSON.parse(decodeURIComponent(qualityStr));
+        if (!Array.isArray(quality)) quality = [quality];
+      }
+    } catch {}
+
+    if (!url && !quality.length) {
+      return new Response("未设置播放链接", { status: 400 });
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <title>解析播放器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dplayer/dist/DPlayer.min.css" />
+  <style>
+    html,body {width:100%;height:100%;margin:0;padding:0;background:#000;}
+    #dplayer {position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:1;}
+  </style>
+</head>
+<body>
+  <div id="dplayer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dplayer@latest/dist/DPlayer.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // 主视频参数
+      var url = ${quality.length ? `"${quality[0].url}"` : `"${url}"`};
+      var pic = "${pic}";
+      // 画质切换
+      var quality = ${quality.length ? JSON.stringify(quality) : "undefined"};
+      var dp = new DPlayer({
+        container: document.getElementById('dplayer'),
+        screenshot: true,
+        theme: '#fada5e',
+        loop: false,
+        lang: 'zh-cn',
+        preload: 'auto',
+        volume: 0.7,
+        mutex: true,
+        autoplay: false,
+        video: quality ? quality[0] : {
+          url: url,
+          pic: pic,
+          thumbnails: pic
+        },
+        quality: quality && quality.length > 1 ? quality : undefined,
+        danmaku: {
+          id: 'demo-'+Math.floor(Math.random()*100000),
+          api: 'https://api.prprpr.me/dplayer/',
+          token: 'demo'
+        }
+      });
+      // 可选: 自动网页全屏
+      // setTimeout(function(){ dp.fullScreen.request('web'); }, 500);
+    });
+  </script>
+</body>
+</html>`;
+
+    return new Response(html, {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, max-age=120' // 让CF补充静态缓存加速
+      }
+    });
+  }
+}
