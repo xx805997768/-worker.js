@@ -1,0 +1,580 @@
+/**
+ * 韩先盛 - 全功能原版复刻 Worker (终极完美版)
+ * 目标域名：us.xxdjiao.cc.cd
+ * 特点：完整复刻原版逻辑，集成韩先盛原创诗句
+ */
+
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  // 保持原版 HTML 结构与逻辑 100% 还原
+  const html = `
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>直播平台导航 & 我的关注直播间</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="UA模拟体验，直播平台导航与可自助添加/删除全平台直播间关注，刷新不丢失。">
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel-bg: #fff;
+      --accent: #2584ea;
+      --button-bg: #e3eeff;
+      --button-accent: #2584ea;
+      --button-text: #fff;
+      --border: #e5e6ef;
+      --yellow: #bb9800;
+      --green: #40b681;
+      --hover: #eec832;
+      --danger: #ee425e;
+      --card-bg: #f8fbfe;
+      --focus-box-bg: #fffbe8;
+      --text-main: #333;
+      --text-soft: #666;
+      --text-light: #888;
+    }
+    body {font-family:"Microsoft YaHei",sans-serif; background:var(--bg); margin:0; color:var(--text-main);}
+    .wrap {max-width: 950px; margin:32px auto 34px auto;}
+    .section-title {margin:31px 0 10px 0;font-size:20px;color:var(--yellow);font-weight:600;letter-spacing:1px;text-align:left;}
+    .theme-switcher {text-align:right;}
+    .theme-btn{
+      background:var(--button-bg); color:var(--accent); border:none;
+      border-radius:4px; font-size:14px; font-weight:500;
+      padding:7px 18px; margin:13px 0 7px 0; cursor:pointer; transition:background .18s;
+    }
+    .theme-btn.active{ background:var(--accent); color:var(--button-text);}
+    #poemBar { background:var(--card-bg); color:var(--accent); font-size:17px; font-weight:500;
+      text-align:center; border-radius:11px; padding:16px 14px 8px 14px;
+      margin:13px auto 8px auto; max-width:600px; box-shadow:0 2px 12px #0001; letter-spacing:1px; position:relative;}
+    #poemBar .poet {font-size:14px; color:var(--yellow); position:absolute;right:14px;bottom:7px;}
+    .ua-tools { background:var(--focus-box-bg);border-radius:8px; padding:16px 16px 10px 16px; margin-bottom:28px; border:1.2px solid var(--border);}
+    .ua-tools .ua-title {font-size:20px; color:var(--yellow); font-weight:600; letter-spacing:1px; margin-bottom:11px;}
+    .ua-tools .ua-buttons button{
+      background:var(--button-bg);border:none;border-radius:4px;color:var(--accent);font-size:15px;font-weight:500;padding:7px 15px;margin-right:8px;cursor:pointer;
+    }
+    .ua-tools .ua-buttons button.active{ background:var(--button-accent); color:var(--button-text);}
+    #uaInfo{margin:8px 0 3px 0; font-size:14px; color:var(--text-soft);}
+    #uaString{word-break:break-all;background:var(--bg);font-size:13px;padding:7px 9px;border-radius:5px;color:var(--text-soft);}
+    .ua-tools .ua-tip {font-size:13px;color:var(--text-light);margin-top:5px;}
+    .nav-columns {display:flex; gap:25px; margin-bottom:32px;}
+    .column {background:var(--panel-bg); padding:18px 14px 13px 14px; border-radius:9px; border:1.2px solid var(--border); flex:1;}
+    .column h2 {margin:0 0 11px 0;font-size:19px;color:var(--accent);font-weight:bold;letter-spacing:1px;text-align:left;}
+    .card {margin-bottom:14px; box-shadow:0 1px 6px #0001; border-radius:5px; background:var(--card-bg);}
+    .card-content p{margin:0;padding:8px 0 4px 0;}
+    .card-btns a {display:inline-block;background:var(--accent);color:var(--button-text);padding:7px 16px;border-radius:4px;text-decoration:none;font-size:15px;font-weight:500;margin:5px 0 7px 0;}
+    .card-btns a:hover{background:var(--yellow);}
+    @media(max-width:900px){ .nav-columns{flex-direction:column;} }
+    .focus-box {
+      background:var(--focus-box-bg);
+      border:1.5px solid var(--border);
+      border-radius:10px;
+      margin:28px 0 22px 0;
+      padding: 32px 26px 24px 26px;
+      max-width: 390px;
+      box-shadow:0 2px 10px #0001;
+      position:relative;
+    }
+    .focus-box h2 {
+      margin:0 0 17px 0;
+      font-size:21px;
+      color:var(--yellow);
+      font-weight:600; letter-spacing:1px;
+      text-align:center;
+    }
+    .input-row{display:flex;gap:10px;margin-bottom:14px;}
+    .input-row input{
+      flex:1; font-size:15px; padding:9px 8px; border-radius:5px;
+      border:1px solid #cad1db; background:var(--panel-bg); outline:none;
+    }
+    input:focus{border-color:var(--yellow);}
+    .btn{ display:inline-block; width:auto; min-width:60px; background:var(--accent); color:var(--button-text);
+      border:none; border-radius:5px; font-size:15px; font-weight:500;
+      padding:8px 15px; margin:3px 9px 10px 0; cursor:pointer; transition:background .18s;}
+    .btn:hover{background:#1666c1;}
+    .btn.yellow{background:var(--yellow);}
+    .btn.green{background:var(--green);}
+    .btn.blue{background:#389fe6;}
+    .list-title{margin:2px 0 10px 2px;color:var(--text-light);font-size:14px;}
+    .live-list{margin:0; padding:0; list-style:none; min-height:22px;}
+    .live-list li{margin-bottom:11px;}
+    .live-list a{
+      display:inline-block; background:var(--card-bg);color:#0078D7;
+      padding:8px 18px; border-radius:4px; font-size:16px; font-weight:500;
+      text-decoration:none; transition:background 0.18s; box-shadow:0 1px 3px #0001;
+    }
+    .live-list a:hover{background:var(--hover); color:var(--text-main);}
+    .delete-btn, .edit-btn{
+      display:inline-block; margin-left:8px; color:var(--danger);
+      background:none; border:none; font-size:15px; cursor:pointer;
+      font-weight:500; padding:0 5px;
+    }
+    .edit-btn{ color:var(--accent);}
+    .delete-btn:hover,.edit-btn:hover{text-decoration:underline;}
+    .qr-btn{display:inline-block; margin-left:8px; color:var(--accent); background:none;
+      border:none; font-size:16px; cursor:pointer; font-weight:500; padding:0 5px;
+    }
+    .qr-btn:hover{color:var(--yellow);}
+    .tips-area{ font-size:13px; color:#7c7256; background:#fcf7e9; border-radius:6px; margin:10px 0;padding: 7px 2px;}
+    .disclaimer{ text-align:center; font-size:13px; color:var(--text-light); margin:13px 0 18px 0;}
+    #importText {width:98%;height:40px;margin:4px 0 3px 0;font-size:13px;border:1px solid #cad1db;border-radius:4px;padding:5px 12px;}
+    #medalPanel{ display:none; position:fixed;top:14px;right:22px;z-index:200;
+      background:var(--panel-bg);color:var(--accent); border-radius:12px; box-shadow:0 4px 15px #0002;
+      padding:21px 30px 11px 23px; min-width:190px; font-size:17px;
+      border:2px solid var(--accent); text-align:center;}
+    #medalPanel .close-btn{position:absolute;top:7px;right:12px;font-size:15px;color:var(--danger);background:none;border:none;cursor:pointer;}
+    #medalPanel .close-btn:hover{color:var(--yellow);}
+    #qrModal{ display:none;position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);
+      background:var(--panel-bg);box-shadow:0 4px 16px #0002;z-index:200;
+      border-radius:11px;padding:24px 14px 14px 14px;text-align:center;
+      color:var(--accent);min-width:210px;max-width:96vw;}
+    #qrModal .close-btn{position:absolute;top:8px;right:12px;font-size:15px;color:var(--danger);background:none;border:none;cursor:pointer;}
+    #qrModal .close-btn:hover{color:var(--yellow);}
+    #qrModal #qrcode{margin:8px 0 10px 0;}
+    .dark-theme {
+      --bg: #131c24;
+      --panel-bg: #192a36;
+      --accent: #3f8fff;
+      --button-bg: #233e51;
+      --button-accent: #468ef7;
+      --button-text: #f6f7ff;
+      --border: #203041;
+      --yellow: #ffe066;
+      --green: #42c49b;
+      --hover: #2d3952;
+      --danger: #eb5757;
+      --card-bg: #173451;
+      --focus-box-bg: #26374d;
+      --text-main: #e7ecf3;
+      --text-soft: #9ab6ce;
+      --text-light: #9ba9b4;
+    }
+    .dark-theme .ua-tools .ua-tip, 
+    .dark-theme .input-row input,
+    .dark-theme .tips-area,
+    .dark-theme .disclaimer,
+    .dark-theme #poemBar
+    {color: #a9b4c7 !important;background: #212c3d !important;}
+    .dark-theme input,.dark-theme #importText {background: #212c3d; color: var(--text-main); border-color: #355171;}
+    .dark-theme .live-list a{background: #233e51; color: #94ccff; box-shadow:0 1px 3px #0007;}
+    .dark-theme .live-list a:hover{background: #2b4874; color: #ffe066;}
+    .dark-theme .btn,.dark-theme .btn.yellow,.dark-theme .btn.green,.dark-theme .btn.blue, .dark-theme .card-btns a{
+      border:none;background:var(--button-accent)!important;color:var(--button-text)!important;}
+    .dark-theme .btn:hover{background:#2a73d6!important; color:var(--yellow)!important;}
+    .dark-theme .card-btns a:hover{background:#ffe066!important; color:#2d3952!important;}
+    .dark-theme #feedbackFloatBtn {background:var(--button-accent)!important;color:var(--yellow)!important;}
+    .dark-theme #feedbackPanel {background:var(--focus-box-bg)!important;color:var(--text-main)!important;}
+    .dark-theme #feedbackText {background:var(--panel-bg)!important;color:var(--text-main)!important;border-color:var(--border)!important;}
+    .dark-theme #medalPanel {background:var(--focus-box-bg)!important;}
+    .dark-theme #qrModal {background:var(--focus-box-bg)!important;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="theme-switcher">
+    <button id="themeToggle" class="theme-btn">🌙 夜间模式</button>
+    <button id="clearAllBtn" class="theme-btn" style="background:#eb5757;color:#fff;margin-left:8px;">🧹 清空所有数据</button>
+  </div>
+  <div id="visitCounter" style="text-align:right;font-size:13px;color:var(--accent);margin:2px 0 16px 0;">
+    统计加载中...
+  </div>
+  <div id="poemBar"></div>
+  <div class="ua-tools">
+    <div class="ua-title">UA模拟体验</div>
+    <div class="ua-buttons" style="margin-bottom:8px;">
+      <button data-ua="default" class="active">恢复默认UA</button>
+      <button data-ua="android">安卓模式</button>
+      <button data-ua="iphone">苹果模式</button>
+      <button data-ua="linux">Linux模式</button>
+      <button data-ua="mac">Mac模式</button>
+    </div>
+    <div class="ua-info" id="uaInfo"></div>
+    <div class="ua-string" id="uaString"></div>
+    <div class="ua-tip">UA模拟仅供体验（不改变实际浏览器UA），如需真实伪装请使用“User-Agent Switcher”等插件。</div>
+  </div>
+  <div class="section-title">直播平台导航</div>
+  <div class="nav-columns">
+    <div class="column">
+      <h2>央视与卫视直播</h2>
+      <div class="card">
+        <div class="card-content"><p>CCTV-1 央视综合频道</p></div>
+        <div class="card-btns"><a href="https://tv.cctv.com/live/cctv1/" target="_blank" class="jump-link" rel="noopener noreferrer">进入央视</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>央视频卫视入口</p></div>
+        <div class="card-btns"><a href="https://www.yangshipin.cn/tv/home?pid=600002309" target="_blank" class="jump-link" rel="noopener noreferrer">进入央视频</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>湖北经视在线直播</p></div>
+        <div class="card-btns"><a href="https://news.hbtv.com.cn/app/tv/432" target="_blank" class="jump-link" rel="noopener noreferrer">进入湖北经视</a></div>
+      </div>
+    </div>
+    <div class="column">
+      <h2>主流直播平台分类</h2>
+      <div class="card">
+        <div class="card-content"><p>斗鱼直播分类</p></div>
+        <div class="card-btns"><a href="https://www.douyu.com/" target="_blank" class="jump-link" rel="noopener noreferrer">进入斗鱼</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>虎牙直播分类</p></div>
+        <div class="card-btns"><a href="https://www.huya.com/g" target="_blank" class="jump-link" rel="noopener noreferrer">进入虎牙</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>快手直播分类</p></div>
+        <div class="card-btns"><a href="https://live.kuaishou.com/" target="_blank" class="jump-link" rel="noopener noreferrer">进入快手</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>抖音直播分类</p></div>
+        <div class="card-btns"><a href="https://live.douyin.com/" target="_blank" class="jump-link" rel="noopener noreferrer">进入抖音</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>战旗直播分类</p></div>
+        <div class="card-btns"><a href="https://www.zhanqi.tv/games" target="_blank" class="jump-link" rel="noopener noreferrer">进入战旗</a></div>
+      </div>
+      <div class="card">
+        <div class="card-content"><p>B站直播分类</p></div>
+        <div class="card-btns"><a href="https://live.bilibili.com/" target="_blank" class="jump-link" rel="noopener noreferrer">进入B站</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">我的关注直播间</div>
+  <div class="focus-box">
+    <h2>直播间关注管理</h2>
+    <div class="input-row">
+      <input id="liveName" type="text" placeholder="直播间名称">
+      <input id="liveUrl" type="url" placeholder="直播间链接（http/https）">
+    </div>
+    <button class="btn" onclick="addLive()">添加关注</button>
+    <button class="btn yellow" onclick="resetLives()">恢复默认</button>
+    <button class="btn green" onclick="exportLives()">导出名单</button>
+    <button class="btn blue" onclick="toggleImportArea()">导入名单</button>
+    <div class="tips-area" id="importArea" style="display:none;">
+      <textarea id="importText" placeholder="每行一个：名称 | 链接"></textarea>
+      <button class="btn blue" onclick="importLives()">导入</button>
+      <button class="btn" onclick="toggleImportArea()" style="background:#bbb;">关闭</button>
+    </div>
+    <div class="list-title">已关注直播间：</div>
+    <ul class="live-list" id="liveList"></ul>
+  </div>
+  <div class="disclaimer">
+    名单随意添加、删除、编辑，自动保存无需登录，支持导入/导出、恢复默认。刷新浏览器后数据依然保留，支持所有平台。
+  </div>
+</div>
+<div id="feedbackFloatBtn" style="
+position:fixed;right:18px;bottom:24px;z-index:99;
+background:var(--accent);color:#fff;font-size:15px;
+padding:8px 17px;border-radius:27px;box-shadow:0 4px 12px #0002;cursor:pointer;transition:background .2s;">
+  📝 反馈建议
+</div>
+<div id="feedbackPanel" style="
+display:none;position:fixed;right:18px;bottom:70px;z-index:100;
+background:var(--focus-box-bg);color:var(--text-main);width:260px;padding:18px 13px;border-radius:12px;box-shadow:0 6px 20px #0003;">
+  <div style="font-weight:700;margin-bottom:8px;">写下你的建议/反馈</div>
+  <textarea id="feedbackText" style="width:99%;height:55px;border-radius:7px;border:1px solid var(--border);padding:8px;background:var(--panel-bg);color:var(--text-main);resize:none;"></textarea>
+  <button id="feedbackCopyBtn" class="btn blue" style="width:70%;margin-top:9px;">复制内容</button>
+  <button id="feedbackCloseBtn" class="btn" style="background:#bbb;width:23%;">关闭</button>
+</div>
+<div id="medalPanel">
+  <button class="close-btn" onclick="document.getElementById('medalPanel').style.display='none'">×</button>
+  <div id="medalInner"></div>
+</div>
+<div id="qrModal">
+  <button class="close-btn" onclick="document.getElementById('qrModal').style.display='none'">×</button>
+  <div id="qrName" style="font-weight:600;font-size:17px;margin-bottom:3px;"></div>
+  <div id="qrcode"></div>
+  <div id="qrUrl" style="color:var(--text-soft);font-size:13px;margin-top:4px;word-break:break-all;"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+  const themeBtn = document.getElementById("themeToggle");
+  const DARK_CLASS = "dark-theme";
+  function setTheme(isDark){
+    let body = document.body;
+    if(isDark){
+      body.classList.add(DARK_CLASS);
+      themeBtn.textContent = "☀️ 日间模式";
+    }else{
+      body.classList.remove(DARK_CLASS);
+      themeBtn.textContent = "🌙 夜间模式";
+    }
+    localStorage.setItem("ui_theme", isDark?"dark":"light");
+  }
+  function systemPrefersDark(){
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  let cur = localStorage.getItem("ui_theme");
+  if(cur==="dark" || (cur==null && systemPrefersDark())) setTheme(true);
+  else setTheme(false);
+  themeBtn.onclick = function(){
+    setTheme(!document.body.classList.contains(DARK_CLASS));
+  }
+})();
+(function(){
+  const key = "visits_counter";
+  const view = document.getElementById("visitCounter");
+  function getTodayStr() {
+    let d=new Date(),m=d.getMonth()+1; m=m<10?"0"+m:m;
+    let day=d.getDate(); day=day<10?"0"+day:day;
+    return d.getFullYear()+"-"+m+"-"+day;
+  }
+  function loadCounter(){
+    let data = {};
+    try{data=JSON.parse(localStorage.getItem(key)||"{}");}catch{data={};}
+    let now = getTodayStr();
+    if(!data.total) data.total=0;
+    if(!data.daily) data.daily= {};
+    if(!data.daily[now]) data.daily[now]=0;
+    data.total++;
+    data.daily[now]++;
+    localStorage.setItem(key,JSON.stringify(data));
+    view.innerHTML = \`你已访问本页 <span style="font-weight:600">\${data.total}</span> 次，今日 <span style="font-weight:600">\${data.daily[now]}</span> 次\`;
+  }
+  loadCounter();
+})();
+(function(){
+  const btn = document.getElementById("clearAllBtn");
+  btn.onclick = function(){
+    if(confirm("确定要清空所有本地数据？此操作会丢失关注名单、主题设置、访问统计等全部本地保存！")){
+      localStorage.clear();
+      alert("清空完成！页面将刷新。");
+      window.location.reload();
+    }
+  }
+})();
+(function(){
+  let showBtn = document.getElementById("feedbackFloatBtn");
+  let panel = document.getElementById("feedbackPanel");
+  let closeBtn = document.getElementById("feedbackCloseBtn");
+  showBtn.onclick = function(){ panel.style.display="block"; }
+  closeBtn.onclick = function(){ panel.style.display="none"; }
+  document.getElementById("feedbackCopyBtn").onclick = function(){
+    let txt = document.getElementById("feedbackText").value.trim();
+    if(!txt){ alert("请输入反馈内容！"); return; }
+    navigator.clipboard && navigator.clipboard.writeText(txt);
+    alert("内容已复制，可粘贴给管理员或开发者！");
+    document.getElementById("feedbackText").value="";
+    panel.style.display="none";
+  }
+})();
+(function(){
+  function getVisitCount(){
+    let v = localStorage.getItem("visits_counter");
+    if(!v) return 0;
+    try{v=JSON.parse(v);}catch{return 0;}
+    return v.total||0;
+  }
+  function getLiveCount(){
+    let arr = [];
+    try{arr=JSON.parse(localStorage.getItem("my_lives_v2")||"[]");}catch{arr=[];}
+    if(!Array.isArray(arr)) return 0;
+    return arr.length;
+  }
+  function checkMedal(){
+    let visit=getVisitCount(),live=getLiveCount(),medal="";
+    if(visit>=1000) medal+="🎖超级常客<br><small>访问1000+次</small><br>";
+    else if(visit>=500) medal+="🏅活跃常客<br><small>访问500+次</small><br>";
+    else if(visit>=100) medal+="🥇普通常客<br><small>访问100+次</small><br>";
+    if(live>=30) medal+="🏆全平台达人<br><small>关注30+直播间</small><br>";
+    else if(live>=15) medal+="🥈热心关注者<br><small>关注15+直播间</small><br>";
+    else if(live>=5) medal+="🥉新手关注者<br><small>关注5+直播间</small><br>";
+    if(medal){
+      let panel = document.getElementById("medalPanel");
+      document.getElementById("medalInner").innerHTML = medal;
+      panel.style.display="block";
+      setTimeout(function(){
+        panel.style.display="none";
+      },6000);
+    }
+  }
+  window.onload = function(){loadLives(); checkMedal(); showPoem();};
+})();
+function showPoem(){
+  var arr = [
+    {txt:"框架破了出去之后，又会进入另外一个框架。",author:"韩先盛"},
+    {txt:"人生得意须尽欢，莫使金樽空对月。",author:"李白《将进酒》"},
+    {txt:"海上生明月，天涯共此时。",author:"张九龄《望月怀远》"},
+    {txt:"春眠不觉晓，处处闻啼鸟。",author:"孟浩然《春晓》"},
+    {txt:"山有木兮木有枝，心悦君兮君不知。",author:"《越人歌》"},
+    {txt:"采菊东篱下，悠然见南山。",author:"陶渊明《饮酒》"},
+    {txt:"长风破浪会有时，直挂云帆济沧海。",author:"李白《行路难》"},
+    {txt:"晴空一鹤排云上，便引诗情到碧霄。",author:"刘禹锡《秋词》"},
+    {txt:"欲穷千里目，更上一层楼。",author:"王之涣《登鹳雀楼》"},
+    {txt:"但愿人长久，千里共婵娟。",author:"苏轼《水调歌头》"},
+    {txt:"此情可待成追忆，只是当时已惘然。",author:"李商隐《锦瑟》"}
+  ];
+  var idx = Math.floor(Math.random()*arr.length);
+  var obj = arr[idx];
+  var html = \`<span>\${obj.txt}</span><span class="poet">——\${obj.author}</span>\`;
+  document.getElementById("poemBar").innerHTML = html;
+}
+const uaInfo = document.getElementById('uaInfo');
+const uaString = document.getElementById('uaString');
+const buttons = document.querySelectorAll('button[data-ua]');
+const defaultUA = navigator.userAgent;
+const UA_MAP = {
+  default: defaultUA,
+  android: 'Mozilla/5.0 (Linux; Android 12; Mobile) AppleWebKit/537.36 Chrome/121.0.0.0 Mobile Safari/537.36',
+  iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari/604.1',
+  linux: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  mac: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_4_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
+};
+function setUA(type) {
+  buttons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector(\`button[data-ua="\${type}"]\`).classList.add('active');
+  let label = {
+    default: "当前系统UA", android: "Android模拟UA",
+    iphone: "iPhone模拟UA", linux:"Linux模拟UA", mac:"Mac模拟UA"
+  }
+  uaInfo.innerHTML = label[type]||type+'模拟UA（仅前端显示效果）';
+  uaString.textContent = UA_MAP[type];
+}
+setUA('default');
+buttons.forEach(btn => {
+  btn.onclick = () => setUA(btn.getAttribute('data-ua'));
+});
+const STORAGE_KEY = "my_lives_v2";
+const DEFAULT_LIVES = [
+  {name:"小虎电竞（斗鱼）", url:"https://www.douyu.com/123456"},
+  {name:"梦幻解说（虎牙）", url:"https://www.huya.com/77777"},
+  {name:"二蛋吃鸡（快手）", url:"https://live.kuaishou.com/u/ABCD12"},
+  {name:"王者乐乐（抖音）", url:"https://live.douyin.com/987654321"},
+  {name:"超级玩家（战旗）", url:"https://www.zhanqi.tv/superplayer"},
+  {name:"小鱼直播间（B站）", url:"https://live.bilibili.com/654321"}
+];
+function showLives(arr){
+  let ul = document.getElementById("liveList"); ul.innerHTML="";
+  arr.forEach((item,idx)=>{
+    let li = document.createElement("li");
+    li.innerHTML = \`<a href="\${item.url}" target="_blank" rel="noopener noreferrer">\${item.name}</a>
+      <button class="edit-btn" title="编辑" onclick="editLive(\${idx})">编辑</button>
+      <button class="delete-btn" title="删除" onclick="deleteLive(\${idx})">删除</button>
+      <button class="qr-btn" title="二维码" onclick="showQR('\${encodeURIComponent(item.name)}','\${encodeURIComponent(item.url)}')">📱</button>\`;
+    ul.appendChild(li);
+  });
+}
+function loadLives(){
+  let arr=[];
+  try{arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{arr=[];}
+  if(!Array.isArray(arr)) arr=[];
+  showLives(arr);
+}
+function addLive(){
+  let name = document.getElementById("liveName").value.trim();
+  let url  = document.getElementById("liveUrl").value.trim();
+  if(!name || !url){ alert("请填写名称和链接！"); return; }
+  if(!/^https?:\\/\\//.test(url)){ alert('链接必须以 http/https 开头！'); return;}
+  let arr=[];
+  try{arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{arr=[];}
+  if(arr.some(x=>x.url===url)){ alert("该直播间已在列表中！"); return; }
+  arr.push({name,url});
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  showLives(arr);
+  document.getElementById('liveName').value = "";
+  document.getElementById('liveUrl').value = "";
+}
+function deleteLive(idx){
+  let arr=[];
+  try{arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{arr=[];}
+  arr.splice(idx,1);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  showLives(arr);
+}
+function editLive(idx){
+  let arr = [];
+  try{arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{arr=[];}
+  if(!arr[idx]) return;
+  let old = arr[idx];
+  let name = prompt("修改直播间名称：", old.name);
+  if(name===null)return;
+  name = name.trim();
+  if(!name){ alert("名称不能为空"); return;}
+  let url = prompt("修改直播间链接：", old.url);
+  if(url===null)return;
+  url = url.trim();
+  if(!/^https?:\\/\\//.test(url)){ alert('链接必须以 http/https 开头！'); return;}
+  arr[idx].name = name;
+  arr[idx].url = url;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  showLives(arr);
+}
+function resetLives(){
+  if(!confirm("确定要恢复为默认关注列表？此操作会丢失现有全部自定义！"))return;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(DEFAULT_LIVES));
+  showLives(DEFAULT_LIVES);
+}
+function exportLives(){
+  let arr = [];
+  try{arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch{arr=[];}
+  if(!arr.length){alert("暂无关注直播间！");return;}
+  let txt = arr.map(x=>\`\${x.name} | \${x.url}\`).join('\\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>{
+      alert("已复制关注名单到剪贴板，可以粘贴到任意地方！");
+    },()=>{
+      alert("复制失败");
+    });
+  }else{
+    let area = document.createElement("textarea");
+    area.value = txt;
+    document.body.appendChild(area);
+    area.select();
+    try{document.execCommand("copy"); alert("已复制关注名单到剪贴板");}catch{alert("复制失败");}
+    document.body.removeChild(area);
+  }
+}
+function toggleImportArea() {
+  let area = document.getElementById("importArea");
+  if(area.style.display==="none"){ area.style.display="block"; }
+  else{ area.style.display="none"; document.getElementById("importText").value=""; }
+}
+function importLives(){
+  let txt = document.getElementById("importText").value;
+  let lines = txt.split('\\n').map(l=>l.trim()).filter(l=>l);
+  let arr = [];
+  for(let l of lines){
+    let parts = l.split('|');
+    if(parts.length<2) continue;
+    let name = parts[0].trim();
+    let url = parts.slice(1).join("|").trim();
+    if(!name || !/^https?:\\/\\//.test(url)) continue;
+    arr.push({name,url});
+  }
+  if(!arr.length){alert("导入格式无效或内容为空"); return;}
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(arr));
+  showLives(arr);
+  document.getElementById("importText").value="";
+  toggleImportArea();
+  alert(\`共导入\${arr.length}个关注直播间！\`);
+}
+["liveName","liveUrl"].forEach(function(id){
+  document.getElementById(id).addEventListener("keyup",function(e){if(e.key==="Enter")addLive();});
+});
+window.showQR = function(name, url){
+  name = decodeURIComponent(name);
+  url = decodeURIComponent(url);
+  document.getElementById("qrName").textContent = name;
+  document.getElementById("qrUrl").textContent = url;
+  let qr = document.getElementById("qrcode");
+  qr.innerHTML = "";
+  new QRCode(qr, {
+    text: url,
+    width: 145,
+    height: 145,
+    colorDark: "#2584ea",
+    colorLight: "#fff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  document.getElementById("qrModal").style.display="block";
+};
+</script>
+</body>
+</html>
+  `
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  })
+}
